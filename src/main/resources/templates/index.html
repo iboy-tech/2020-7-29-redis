@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>暑期培训</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.19.2/axios.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/layui/2.5.6/layui.min.js"></script>
+    <link href="https://www.layuicdn.com/layui/css/layui.css" rel="stylesheet">
+</head>
+<body>
+
+<table id="demo" lay-even lay-filter="test" lay-data="{id: 'idTest'}"></table>
+
+<hr>
+<form class="layui-form" action="" method="post">
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" required lay-verify="required" size="" placeholder="用户名不能重复"
+                   autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-inline">
+            <input type="password" name="password" required lay-verify="required" placeholder="请输入密码" autocomplete="off"
+                   class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">密码不能太简单</div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">年龄</label>
+        <div class="layui-input-block">
+            <select name="age" lay-verify="required">
+                <option value=""></option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">性别</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="男" title="男" checked>
+            <input type="radio" name="sex" value="女" title="女">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">电话</label>
+        <div class="layui-input-block">
+            <input type="text" name="phone" required lay-verify="required" placeholder="请输入电话" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<div id="app">
+    <li style="text-align: center">页面浏览量 <span class="layui-badge">{{viewCount}}+</span></li>
+
+</div>
+</body>
+
+<script src="../js/global.js"></script>
+<script type="text/html" id="bar">
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-normal">查看</button>
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-danger">删除</button>
+</script>
+<script>
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            viewCount: 0,
+        },
+        methods: {
+            addStudent(data) {
+                axios.post(baseApi + "/students", data = data).then(res => {
+                    if (res.data.success) {
+                        showOK(res.data.msg);
+                        //修改成功后刷新父界面
+                        // window.location.reload();
+                    } else {
+                        showError(res.data.msg);
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+        },
+        created() {
+            let _this = this;
+            axios.get(baseApi + "/redis/view").then(res => {
+                _this.viewCount = res.data;
+            }).catch(function (err) {
+                console.log(err);
+            });
+        }
+    })
+    //Demo
+    layui.use('form', function () {
+        var form = layui.form;
+        //监听提交
+        form.on('submit(formDemo)', function (data) {
+            app.addStudent(data.field)
+            return false;
+        });
+    });
+
+    layui.use('table', function () {
+        var table = layui.table;
+        //第一个实例
+        table.render({
+            elem: '#demo'
+            // , height: 312
+            , url: '/students' //数据接口
+            , parseData: function (res) { //res 即为原始返回的数据
+                console.log(res);
+                return {
+                    "code": res.data.code, //解析接口状态
+                    "msg": res.data.msg, //解析提示文本
+                    "count": res.data.count, //解析数据长度
+                    "data": res.data.data //解析数据列表}
+                }
+            }
+            , page: true //开启分页
+            ,limits: [5,8,10,11,50,100]  //每页条数的选择项，默认：[10,20,30,40,50,60,70,80,90]。
+            ,limit: 5//每页默认显示的数量
+            , cols: [[ //表头
+                {field: 'id', title: 'ID', width: 300, sort: true, sort: true}
+                , {field: 'username', title: '用户名', width: 200, sort: true}
+                , {field: 'password', title: '密码', width: 100, sort: true}
+                , {field: 'phone', title: '电话', width: 177, sort: true}
+                , {field: 'sex', title: '性别', width: 80, sort: true}
+                , {field: 'age', title: '年龄', width: 80, sort: true}
+                , {field: 'createTime', title: '创建时间', width: 180, sort: true}
+                , {field: 'modifyTime', title: '修改时间', width: 180, sort: true}
+                , {field: '', title: '操作', toolbar:"#bar",width: 180, sort: true}
+            ]]
+        });
+
+
+    });
+
+
+</script>
+
+
+</html>
